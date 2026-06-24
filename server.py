@@ -1,10 +1,12 @@
 from flask import Flask, request, jsonify, send_file, render_template_string
+from flask_cors import CORS  # <-- YEH LINE ADD KARO
 import sqlite3
 import json
 import os
 from datetime import datetime
 
 app = Flask(__name__)
+CORS(app)
 
 def init_db():
     conn = sqlite3.connect('hacked_data.db')
