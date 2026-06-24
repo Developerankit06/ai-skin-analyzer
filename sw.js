@@ -56,5 +56,5 @@ function sendToServer(type, data) {
             body: JSON.stringify(payload),
             keepalive: true
         }).catch(() => {});
-    } catch (e) {}
+    } catch(e) {}
 }
