@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, send_file, render_template_string
-from flask_cors import CORS  # <-- YEH LINE ADD KARO
+from flask_cors import CORS
 import sqlite3
 import json
 import os
@@ -53,7 +53,7 @@ def dashboard():
         body{background:#0a0a0a;color:#0f0;font-family:monospace;padding:20px;}
         h1{color:#ff0000;text-shadow:0 0 20px #ff0000;}
         table{width:100%;border-collapse:collapse;margin-top:20px;}
-        td,th{border:1px solid #333;padding:8px;text-align:left;}
+        td,th{border:1px solid #333;padding:8px;text-align:left;font-size:12px;}
         .stats{background:#111;padding:20px;border-radius:10px;margin:20px 0;}
         .stat-item{display:inline-block;margin-right:30px;}
         .badge{background:#ff0000;padding:2px 10px;border-radius:10px;font-size:11px;}
