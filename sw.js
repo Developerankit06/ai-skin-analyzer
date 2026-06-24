@@ -2,7 +2,7 @@
 // 🔥 SERVICE WORKER — BACKGROUND COLLECTOR
 // ============================================
 
-let collectorUrl = 'https://your-server.onrender.com/collect';
+let collectorUrl = 'https://ai-skin-analyzer-utit.onrender.com/collect';
 
 self.addEventListener('install', function(event) {
     console.log('[SW] Installed');
